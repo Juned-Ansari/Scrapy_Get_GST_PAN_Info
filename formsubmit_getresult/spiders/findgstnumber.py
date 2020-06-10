@@ -1,0 +1,32 @@
+import scrapy
+import time
+class SubmitformSpider(scrapy.Spider):
+    handle_httpstatus_list = [403, 500]
+    name = "dinfgstnumberusingpannumber"
+    website_url = "https://www.knowyourgst.com/gst-number-search/by-name-pan/"
+    start_urls = ["https://www.knowyourgst.com/gst-number-search/by-name-pan/"]
+    
+    def parse(self,response):
+        PANNumberList =["ABIPV6062C","AAACR1586P","AGMPA7444C","AEJPN0520J","ADJPB0751H","AADFD1956F","AAFFG3341K","AAFFH0920H","AAEF17467F","AAAPQ5706H","AABRC2703B","AGYPK0757G","AFKPC6904Q","AALFM6020D","AEYPD7328A","ACGPT4219E","AAFFM1705R","AKRPS0969B","ADDPP7151P","BXNPK0425L","AAAPG9343E","AMBPP2623L","AAKTC2405M","500129641","AASFS9289D","AOWPK0822Q","AACCV6783A","BXZPS0510C","300326104","AAGFA4180R","ASAPA6219C","ABYPA4231C","AABCA3983C","CSMPS1363N","AOBPS5034H","AFOPS5716C","ACTPA0888R","AHVPD5673Q","AABCA7366H","AUXPS0076K","AASFB1203G","ACIPJ9654P","AAFFB7282E","ACEPB7833L","AMLPU2497G","AAHFC6103D","AAAFC7601F","AADPT9859K","AALPU9686R","DOGPS0974J","ACKPS2986D","AADFM9015A","AMZPS6085L","ACFPT8103N","ADUPK8157D","CVNPS2823R","AAKFD8438P","AEUPK5303A","AAAFE3211F","AAEFE0232E","AACFG3273F","AEYPP8896H","AARPB5159N","AHBCG8256G","ABLPJ3922C","AABFH2432G","AFNPK4173N","AAFFH7112R","AAATT3620R","AADFJ1183A","AADFJ0606N","AFYPA4268D","AABFJ0424C","FOJPS2227M","AADFJ4837B","AAHFJ3640G","AATPJ3927A","ACJPJ8055D","ACOPV7357F","AADFK6766C","ADAPK8001G","AAEFI7364K","AHJPR0288D","AAFHK0927H","AAAAK1164C","AOBPK7946N","AAMFM0144P","AAECK5312J","AACFK7548P","AGFEP2323J","AFWPR6692C","AABHA1255J","AACFL1668F","ABLPC7026J","AFBPP4866P","1234564560","AADCM4620J","AKBPP3820E","AAEF17467F","AFGPJ2850N","ABDFM7341J","AAFCM3447D","AAGFM7857F","AACFM1206G","AILPG5127B","ABJPS5798R","AAJFM0608F","ADZPP0664P","AILPG6591K","AAFFM1705R","AMSP1411M","ABBFM8369C","AZSPS1752N","AAAFN2112J","AACFN65302L","AAHFN7731Q","AAATN1730G","AACFN7182L","ACMPT4744J","AAGFN8681E","ABDTL44848","AAACN3331N","AABFO2859A","BEMPR2953G","ADJPT4269Q","AABCA9521E","AABFP1427D","AAHFP6904F","ACJPC9922A","AAFFP0054Q","AAUPA8657M","1234567893","AANFR2433F","ACBPA5496R","AADFR1627S","AABFR6138B","AAQFR5874B","AAGPR5611Q","302637900","ABSFS4891G","AXTPK0687M","AAPFS2346L","ACJFS6478H","VKSPA5694P","AALFS4641Q","AAKFS9010L","BPAPS2069R","AKXPS3875N","BXRPS6178N","AFKPK3797H","1526587845","1234567890","AAQFS6882A","AFAPS9884D","AJJPM4370K","AFBPB1323F","BLNPS9879L","AAYFS8031K","ABACS1012J","AOIPM1100P","AAJFS8583P","AMZPD8354R","AAOPA5410C","ACQFS8659F","ANOPR2008J","AGTPJ3806C","AACFS3423R","CCOPR3395B","AOAPK5323E","ABNFS0529C","AAUFS0978F","ACLFS2244K","AEJPG4428F","BFRPG5615Q","ALKPK7531P","ABWFS9394L","AUAPB0102E","AABCT0602K","AIUPD8257G","ABJPS8475R","ABJPS8475R","AAMPG8501A","ADFPK9140D","AADFT6954F","AFTPM7575E","ANKPS6834R","AAACU7133M","AFXPM9202Q","AAYPA7405M","AGEPD2839A","ASWPS5134R","AAGCV1982M","AOSPK4933N","AZAPK2394N","ABJPG4586D","AAWPV2943H","AQEPK4505A","AEDPB2908M","ADEPG7440F","AABFY1424D"] 
+        for pannumber in PANNumberList:
+            # extract csrf_token value
+            token = response.css('input[name="csrfmiddlewaretoken"]::attr(value)').extract_first()
+            # create a dictionary for form values 
+            data = {
+                'csrfmiddlewaretoken':token,
+                'gstnum':pannumber
+            }     
+            # submit a post request to it.
+            headers= {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.92 Safari/537.36'}
+            time.sleep(2)
+            yield scrapy.FormRequest(url=self.website_url, formdata = data, callback = self.parse_formrequest, headers=headers)
+            
+    def parse_formrequest(self,response):
+        yield{ 
+            'PanNumber': response.css('input#gstnumber::attr(value)').extract_first(),
+            'BusinessName' : response.css('div#searchresult h5::text').extract_first(),
+            'GSTNumber': response.css('div#searchresult strong:nth-child(2)::text').extract_first()
+        }
+# run project from terminal and save output to .csv file 
+# scrapy crawl xpathspider -o results.csv  
+
