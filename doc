@@ -1,0 +1,78 @@
+# INSTALL SCRAPY
+pip install scrapy
+
+# CREATE NEW PROJECT
+scrapy startproject justdial
+
+# move to project directory
+cd justdial
+
+####################myspider.py
+import scrapy
+class JustdialSpider(scrapy.Spider):
+    name = "justdialspider_xpath"
+    start_urls = ["http://www.laughfactory.com/jokes/science-jokes"]
+    
+    def parse(self,response):
+        for site in response.xpath("//div[@class='jokes']"):
+            item = {
+                'joke_text': site.xpath(".//div[@class='joke-text']/p/text()").extract_first(default='').strip()
+            }
+            yield item
+            
+        next_page = response.xpath("//li[@class='next']/a/@href").extract_first(default='').strip()
+        if next_page is not None:
+            next_page_link = response.urljoin(next_page)
+            yield scrapy.Request(url=next_page_link, callback=self.parse) 
+# run project from terminal and save output to .csv file 
+# scrapy crawl justdialspider_xpath -o results.csv    
+####################
+
+# TO INSERT DATA TO MYSQL USE PIPELINE
+settings.py
+-----------
+uncomment below code  
+ITEM_PIPELINES = {
+   'justdial.pipelines.JustdialPipeline': 300,
+}
+
+pipelines.py
+------------
+# -*- coding: utf-8 -*-
+
+# Define your item pipelines here
+#
+# Don't forget to add your pipeline to the ITEM_PIPELINES setting
+# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+
+import pymysql
+import re
+import sys
+
+class JustdialPipeline(object):
+    host = 'localhost'
+    user = 'root'
+    password = 'root'
+    db = 'scrapydb'
+
+    def __init__(self):
+        self.connection = pymysql.connect(self.host, self.user, self.password, self.db)
+        self.cursor = self.connection.cursor()
+
+
+    def process_item(self, item, spider):
+        try:
+            self.cursor.execute("INSERT INTO quotes (quote) VALUES (%s)", (item['joke_text']))
+            self.connection.commit()
+        except Exception as e:
+            print("Error:",e)
+        return item
+
+    def close_spider(self, spider):
+        self.cursor.close()
+        self.connection.close()
+
+
+
+
+
